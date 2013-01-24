@@ -8,18 +8,25 @@
 
 #include <stdio.h>
 #define MAXSIZE 3
-void matrixMultByScalar(int matrix[MAXSIZE][MAXSIZE], int scalar, int rows, int cols);
-void printMatrix(int matrix[MAXSIZE][MAXSIZE], int rows, int cols);
+void matrixMultByScalar(float matrix[MAXSIZE][MAXSIZE], int scalar, int rows, int cols);
+void printMatrix(float matrix[MAXSIZE][MAXSIZE], int rows, int cols);
 int rowReduceNeeded(float matrix[MAXSIZE][MAXSIZE], int row);
+void rowReduce(float matrix[MAXSIZE][MAXSIZE], int rows, int cols);
+void swapRow(float matrix[MAXSIZE][MAXSIZE], int row1, int row2, int entries);
 float findPivot(float matrix[MAXSIZE][MAXSIZE], int row);
 float getLeadingNumber(float matrix[MAXSIZE][MAXSIZE], int row);
 void reduceRow(float matrix[MAXSIZE][MAXSIZE], int firstRow, int secondRow, float pivotMultiplier);
+void squareMatrixMult(float matrix1[MAXSIZE][MAXSIZE], float matrix2[MAXSIZE][MAXSIZE],
+                      float outputMatrix[MAXSIZE][MAXSIZE], int rows, int cols);
+float getDeterminant2by2(float matrix[MAXSIZE][MAXSIZE]);
+float getPivotsAndMultiply(float matrix[MAXSIZE][MAXSIZE], int rows, int cols);
 
 int main(int argc, const char * argv[])
 {
     int n;
-    int m1[MAXSIZE] [MAXSIZE];
-    int m2[MAXSIZE][MAXSIZE];
+    float m1[MAXSIZE] [MAXSIZE];
+    float m2[MAXSIZE][MAXSIZE];
+    float m3[MAXSIZE][MAXSIZE]; //m3 is just the output matrix
     
     m1[0][0] = 1;    m1[0][1] = 3;    m1[0][2] = 5;
     m1[1][0] = 2;    m1[1][1] = 6;    m1[1][2] = 10;
@@ -32,11 +39,61 @@ int main(int argc, const char * argv[])
 
     //multiply matrix m1 by a scalar
     matrixMultByScalar(m1, 2, 3, 3); //multiply this 3x3 matrix by a scalar of 2
-    printMatrix(m1, 3, 3);
+    
+    squareMatrixMult(m1, m2, m3, 3, 3); // multiply m1 and m2 into matrix m3
+    
+    printMatrix(m3, 3, 3);
     return 0;
 }
 
-void matrixMultByScalar(int matrix[MAXSIZE][MAXSIZE], int scalar, int rows, int cols)
+/*
+ [1 3 5  [1 3 5    [4 19 50
+  2 6 10  1 6 10    8 42 100
+  3 9 15] 0 0 3]   12 54 150
+ */
+
+void swapRow(float matrix[MAXSIZE][MAXSIZE], int row1, int row2, int entries)
+{
+    /* this method will swap row1 and row2 in the matrix */
+    float swapArray[entries];
+    
+    for (int i=0; i < entries; i++)
+    {
+        swapArray[i] = matrix[row2][i]; //copy off the entries in row 2, since we are going to overrite them
+        matrix[row2][i] = matrix[row1][i];
+        matrix[row1][i] = swapArray[i];
+    }
+}
+
+float findPivot(float matrix[MAXSIZE][MAXSIZE], int row)
+{
+    //dummy method. to finish later!
+    return 3.0;
+}
+
+float getLeadingNumber(float matrix[MAXSIZE][MAXSIZE], int row)
+{
+        //dummy method. to finish later!
+    return 3.0;
+}
+
+float getPivotsAndMultiply(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
+{
+        //dummy method. to finish later!
+    return 3.0;
+}
+
+int rowReduceNeeded(float matrix[MAXSIZE][MAXSIZE], int row)
+{
+        //dummy method. to finish later!
+    return 0;
+}
+
+void reduceRow(float matrix[MAXSIZE][MAXSIZE], int firstRow, int secondRow, float pivotMultiplier)
+{
+        //dummy method. to finish later!
+}
+void matrixMultByScalar(float matrix[MAXSIZE][MAXSIZE], int scalar, int rows, int cols)
 {
     /*
        This function will simply multiply a matrix by a scalar
@@ -51,7 +108,30 @@ void matrixMultByScalar(int matrix[MAXSIZE][MAXSIZE], int scalar, int rows, int 
     }
 }
 
-float** rowReduce(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
+float getDeterminant(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
+{
+    if (cols > rows) //if we have a free variable
+        return 0;
+    else if ((cols == 2) && (rows == 2)) //if this is a 2x2 matrix, use 1/ad-bc
+        getDeterminant2by2(matrix);
+    else
+    {
+        rowReduce(matrix, rows, cols);
+        return (getPivotsAndMultiply(matrix, rows, cols)); //return the multiples of the pivots of the row reduced matrix
+    }
+}
+
+float getDeterminant2by2(float matrix[MAXSIZE][MAXSIZE])
+{
+    /* Given a 2x2 Matrix of
+     [a  b
+      c  d]
+     return ad - bc
+     */
+    return (matrix[0][0]*matrix[1][1]) - (matrix[0][1]*matrix[1][0]);
+}
+
+void rowReduce(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
 {
     /*
     Row reduce details
@@ -92,10 +172,10 @@ float** rowReduce(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
             }
         }
     }
-    return matrix;
 }
 
-int** squareMatrixMult(int matrix1[MAXSIZE][MAXSIZE], int matrix2[MAXSIZE][MAXSIZE], int rows, int cols)
+void squareMatrixMult(float matrix1[MAXSIZE][MAXSIZE], float matrix2[MAXSIZE][MAXSIZE],
+                      float outputMatrix[MAXSIZE][MAXSIZE], int rows, int cols)
 {
     /* This function will multiply two matrices together using dot products
      row 1 dotted with column 1, row 1 dotted with column 2, row 1 dotted with column 3
@@ -106,13 +186,37 @@ int** squareMatrixMult(int matrix1[MAXSIZE][MAXSIZE], int matrix2[MAXSIZE][MAXSI
      3 6 4]   1 1 1]
      
      Loop thru first row of matrix 1 (each entry is a j)
+     
+     for each row of matrix1
+        for each column of matrix1 
+     
+     matrix1[0][0] * matrix2[0][0] + matrix1[0][1]*matrix2[1][0] + matrix1[0][2]*matrix2[2][0]
+     m1[0][0] * m2[0][1] + m1[0][1] * m2[1][1] + m1[0][2] * m2[2][1]
+     row1 * column1, row1 * column 2, row1 * column 3
     */
     
-    int outputMatrix[MAXSIZE][MAXSIZE];
-    
-    for (int i =0; i < rows; i++)
+    for (int i = 0; i < rows; i++)
     {
-        for (int colCount = 0; colCount < cols; colCount++)
+        //want to dot each row of matrix 1 with a column of matrix 2, this will make an entry
+        //in the output matrix
+        for (int outColumn = 0; outColumn < cols; outColumn++) {
+            float newValue = 0;
+            
+            for (int j = 0; j < cols; j++) //j in this case is cols of matrix 1
+            {
+                newValue+=(matrix1[i][j] * matrix2[j][outColumn]);
+            }
+            outputMatrix[i][outColumn] = newValue; //output row/column = the row and column dotted
+        }
+    }
+ }
+/*
+void squareMatrixMult2(float matrix1[MAXSIZE][MAXSIZE], float matrix2[MAXSIZE][MAXSIZE],
+                      float outputMatrix[MAXSIZE][MAXSIZE], int rows, int cols)
+{    
+    for (int i =0; i < rows; i++) //want to multiply each row of first matrix by
+    {
+        for (int colCount = 0; colCount < cols; colCount++) //for each column, multiply it
         {
             int newValue = 0;
             int colCount = 0;
@@ -125,16 +229,16 @@ int** squareMatrixMult(int matrix1[MAXSIZE][MAXSIZE], int matrix2[MAXSIZE][MAXSI
         }
     }
 }
+*/
 
 
-
-void printMatrix(int matrix[MAXSIZE][MAXSIZE], int rows, int cols)
+void printMatrix(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
 {
     for (int i=0; i < rows; i++)
     {
         for (int j=0; j < cols; j++)
         {
-            printf("%d ", matrix[i][j]);
+            printf("%f ", matrix[i][j]);
         }
         printf("\n");
     }
