@@ -7,14 +7,15 @@
 //
 
 #include <stdio.h>
+
 #define MAXSIZE 3
 void matrixMultByScalar(float matrix[MAXSIZE][MAXSIZE], int scalar, int rows, int cols);
 void printMatrix(float matrix[MAXSIZE][MAXSIZE], int rows, int cols);
 int rowReduceNeeded(float matrix[MAXSIZE][MAXSIZE], int row);
 void rowReduce(float matrix[MAXSIZE][MAXSIZE], int rows, int cols);
 void swapRow(float matrix[MAXSIZE][MAXSIZE], int row1, int row2, int entries);
-float findPivot(float matrix[MAXSIZE][MAXSIZE], int row);
-float getLeadingNumber(float matrix[MAXSIZE][MAXSIZE], int row);
+float findPivot(float matrix[MAXSIZE][MAXSIZE], int row, int columns);
+float getLeadingNumber(float matrix[MAXSIZE][MAXSIZE], int row, int columns);
 void reduceRow(float matrix[MAXSIZE][MAXSIZE], int firstRow, int secondRow, float pivotMultiplier);
 void squareMatrixMult(float matrix1[MAXSIZE][MAXSIZE], float matrix2[MAXSIZE][MAXSIZE],
                       float outputMatrix[MAXSIZE][MAXSIZE], int rows, int cols);
@@ -41,7 +42,8 @@ int main(int argc, const char * argv[])
     matrixMultByScalar(m1, 2, 3, 3); //multiply this 3x3 matrix by a scalar of 2
     
     squareMatrixMult(m1, m2, m3, 3, 3); // multiply m1 and m2 into matrix m3
-    
+    printMatrix(m3, 3, 3);
+    swapRow(m3, 1, 2, 3);
     printMatrix(m3, 3, 3);
     return 0;
 }
@@ -65,16 +67,28 @@ void swapRow(float matrix[MAXSIZE][MAXSIZE], int row1, int row2, int entries)
     }
 }
 
-float findPivot(float matrix[MAXSIZE][MAXSIZE], int row)
+float findPivot(float matrix[MAXSIZE][MAXSIZE], int row, int columns)
 {
-    //dummy method. to finish later!
-    return 3.0;
+    /* This is a function for finding the pivot in a first row.
+     Cases we need to handle
+     If there is no pivot, return 0, which is basically false
+     0 0 0 
+     0 1 0
+     0 0 1
+     */
+    float leadingNumb = getLeadingNumber(matrix, row, columns);
+    return leadingNumb;
 }
 
-float getLeadingNumber(float matrix[MAXSIZE][MAXSIZE], int row)
+float getLeadingNumber(float matrix[MAXSIZE][MAXSIZE], int row, int columns)
 {
-        //dummy method. to finish later!
-    return 3.0;
+    //get first nonzero number
+    for (int j = 0; j < columns; j++)
+    {
+        if (matrix[row][j] != 0)
+            return matrix[row][j];
+    }
+    return 0;
 }
 
 float getPivotsAndMultiply(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
@@ -83,9 +97,31 @@ float getPivotsAndMultiply(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
     return 3.0;
 }
 
+float multiplyDiagonals(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
+{
+    /* If pivots arent along the diagonals, then we'll have a free column
+     */
+    float pivotMult = 0;
+    for (int i = 0; i < rows; i++)
+    {
+        if (i==0)
+            pivotMult = matrix[i][0];
+        else
+            pivotMult = pivotMult*matrix[i][i];
+        
+    }
+    return pivotMult;
+}
+
 int rowReduceNeeded(float matrix[MAXSIZE][MAXSIZE], int row)
 {
-        //dummy method. to finish later!
+    /* With this function, we try and figure out if row reduction is needed.
+       If the matrix has N rows, and the first row is not something like 0 0 0
+        then use the first row and compare it to the 2nd row, 3rd row, etc. Find
+     a column multiplier and then row reduce the other columns now, swapping them if 
+     needed.
+     
+     */
     return 0;
 }
 
@@ -112,7 +148,7 @@ float getDeterminant(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
 {
     if (cols > rows) //if we have a free variable
         return 0;
-    else if ((cols == 2) && (rows == 2)) //if this is a 2x2 matrix, use 1/ad-bc
+    else if ((cols == 2) && (rows == 2)) //if this is a 2x2 matrix, use ad-bc
         getDeterminant2by2(matrix);
     else
     {
@@ -151,7 +187,7 @@ void rowReduce(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
                 want a function for making a temporary copy of a row and then subtracting it
     
     int getPivotMultiple(int firstRowNumber, int secondRowNumber); //get pivots
-    void rowReduce(matrix* matrix, int firstRowNumber, int secondRowNumber); //row reduce one row at a time
+    void rowReduce(matrix* matrix, int firstRowNumber, int secondRowNumber); //subtract one row from another
     void rowReduceComplete(matrix*); //this will contain a loop to row reduce the entire matrix
     int findPivot(matrix*, int rowNumber); //find the first nonzero row number that we will need to reduce
 */
@@ -160,13 +196,13 @@ void rowReduce(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
     for (int i = 0; i < rows; i++) //to do: make sure we keep row reducing until done! Multiple passes
     {
         //to add: method to figure out if we need a row swap
-        currentPivot = findPivot(matrix, i); //this will find the pivot on 0-based row i
+        currentPivot = findPivot(matrix, i, cols); //this will find the pivot on 0-based row i
         if ((i + 1)<rows) //if i+1 is in the bounds of the matrix
         {
             //do we need to row reduce?
             if (rowReduceNeeded(matrix, i+1))
             {
-                float leadingNumber = getLeadingNumber(matrix, i+1);
+                float leadingNumber = getLeadingNumber(matrix, i+1, cols);
                 float pivotMultiplier = leadingNumber / currentPivot;
                 reduceRow(matrix, i, i+1, pivotMultiplier); //multiply first row by pivot multiplier, then subtract from second
             }
@@ -210,27 +246,6 @@ void squareMatrixMult(float matrix1[MAXSIZE][MAXSIZE], float matrix2[MAXSIZE][MA
         }
     }
  }
-/*
-void squareMatrixMult2(float matrix1[MAXSIZE][MAXSIZE], float matrix2[MAXSIZE][MAXSIZE],
-                      float outputMatrix[MAXSIZE][MAXSIZE], int rows, int cols)
-{    
-    for (int i =0; i < rows; i++) //want to multiply each row of first matrix by
-    {
-        for (int colCount = 0; colCount < cols; colCount++) //for each column, multiply it
-        {
-            int newValue = 0;
-            int colCount = 0;
-            //for each row of matrix 1, multiply it with column 1 of matrix 2
-            for (int j=0; j < cols; j++)
-            {
-                newValue+= matrix1[i][j]*matrix2[j][colCount];
-            }
-            outputMatrix[i][colCount] = newValue;
-        }
-    }
-}
-*/
-
 
 void printMatrix(float matrix[MAXSIZE][MAXSIZE], int rows, int cols)
 {
